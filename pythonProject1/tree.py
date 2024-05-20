@@ -3,40 +3,35 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
-import talib
+import talib  # 引入 TA-Lib
 
 # 加载数据
-data = pd.read_csv('online/TSLA.csv')
+train_data = pd.read_csv('online/TSLA.csv')
+test_data = pd.read_csv('online/target.csv')
 
 # 转换日期格式
-data['Date'] = pd.to_datetime(data['Date']).map(pd.Timestamp.toordinal)
+train_data['Date'] = pd.to_datetime(train_data['Date']).map(pd.Timestamp.toordinal)
+test_data['Date'] = pd.to_datetime(test_data['Date']).map(pd.Timestamp.toordinal)
 
 # 计算技术指标
-data['SMA20'] = talib.SMA(data['Close'], timeperiod=20)
-data['RSI14'] = talib.RSI(data['Close'], timeperiod=14)
+train_data['SMA20'] = talib.SMA(train_data['Close'], timeperiod=20)
+train_data['RSI14'] = talib.RSI(train_data['Close'], timeperiod=14)
+test_data['SMA20'] = talib.SMA(test_data['Close'], timeperiod=20)
+test_data['RSI14'] = talib.RSI(test_data['Close'], timeperiod=14)
 
 # 处理NaN值（例如通过填充或删除）
-data.fillna(method='bfill', inplace=True)
+train_data.bfill(inplace=True)
+test_data.bfill(inplace=True)
 
-# 划分训练集和测试集（这里我们用全部数据来训练模型）
-X_train = data.drop(['Close'], axis=1)
-y_train = data['Close']
+# 准备训练和测试数据
+X_train = train_data.drop('Close', axis=1)
+y_train = train_data['Close']
+X_test = test_data.drop('Close', axis=1)
+y_test = test_data['Close']
 
 # 创建随机森林模型并训练
 model = RandomForestRegressor(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
-
-# 加载目标测试数据（用于模型效果对比）
-target_data = pd.read_csv('online/target.csv')
-target_data['Date'] = pd.to_datetime(target_data['Date']).map(pd.Timestamp.toordinal)
-
-# 应用同样的技术指标到测试数据
-target_data['SMA20'] = talib.SMA(target_data['Close'], timeperiod=20)
-target_data['RSI14'] = talib.RSI(target_data['Close'], timeperiod=14)
-target_data.fillna(method='bfill', inplace=True)
-
-X_test = target_data.drop(['Close'], axis=1)
-y_test = target_data['Close']
 
 # 进行预测
 predictions = model.predict(X_test)
@@ -51,7 +46,7 @@ print("R^2 Score:", r2)
 plt.figure(figsize=(10, 5))
 plt.plot(y_test.index, y_test, label='Actual Prices', color='blue')
 plt.plot(y_test.index, predictions, label='Predicted Prices', color='red')
-plt.title('Stock Price Prediction for 2024')
+plt.title('Stock Price Prediction')
 plt.xlabel('Date')
 plt.ylabel('Prices')
 plt.legend()
