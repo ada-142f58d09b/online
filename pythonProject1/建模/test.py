@@ -19,6 +19,7 @@ def apply_wavelet(data, wavelet='db4', level=1):
         features[f'wt_max_{i}'] = np.max(coeff)
         features[f'wt_min_{i}'] = np.min(coeff)
     return features
+    
 
 # 计算小波特征
 wavelet_features = []
